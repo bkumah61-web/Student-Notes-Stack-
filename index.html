@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Lecture Notes Management System</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+header {
+    background: #173b70;
+    color: white;
+    padding: 24px;
+    position: relative;
+}
+
+header h1 {
+    margin: 0 55px 8px 0;
+    font-size: 25px;
+}
+
+header p { margin: 0; color: #dbeafe; }
+
+.info-button {
+    position: absolute;
+    right: 22px;
+    top: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #facc15;
+    color: #172554;
+    border: 2px solid white;
+    font-size: 25px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.container {
+    max-width: 1150px;
+    margin: 25px auto;
+    padding: 0 16px;
+}
+
+.panel {
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px #0000000c;
+}
+
+h2 { color: #173b70; margin-top: 0; }
+label { display: block; font-weight: bold; margin-top: 12px; }
+
+input, textarea {
+    width: 100%;
+    padding: 12px;
+    margin-top: 7px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    font: inherit;
+}
+
+textarea {
+    min-height: 190px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+button {
+    padding: 11px 15px;
+    margin: 4px 3px 4px 0;
+    border: none;
+    border-radius: 7px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:disabled { opacity: .45; cursor: not-allowed; }
+
+.primary { background: #2563eb; color: white; }
+.secondary { background: #e2e8f0; color: #1e293b; }
+.success { background: #dcfce7; color: #166534; }
+.danger { background: #fee2e2; color: #991b1b; }
+
+.layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 310px;
+    gap: 20px;
+}
+
+.status { color: #64748b; font-size: 14px; }
+
+.note-card {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 14px;
+    margin: 10px 0;
+    background: white;
+    overflow-wrap: anywhere;
+}
+
+.note-card.current {
+    border: 2px solid #2563eb;
+    background: #eff6ff;
+}
+
+.note-card h3 { margin: 0 0 8px; }
+.note-card p { white-space: pre-wrap; line-height: 1.5; }
+
+.top-badge {
+    display: inline-block;
+    background: #dcfce7;
+    color: #166534;
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.stack-box {
+    background: #eff6ff;
+    border-left: 4px solid #2563eb;
+    border-radius: 6px;
+    padding: 13px;
+    margin-top: 12px;
+}
+
+.stack-item {
+    background: white;
+    border: 1px solid #bfdbfe;
+    padding: 10px;
+    margin-top: 8px;
+    border-radius: 6px;
+    overflow-wrap: anywhere;
+}
+
+#importance {
+    background: #fffbeb;
+    border: 2px solid #eab308;
+}
+
+#importance h2 { color: #854d0e; }
+#importance li { margin-bottom: 10px; line-height: 1.5; }
+.hidden { display: none; }
+
+@media (max-width: 800px) {
+    .layout { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <button class="info-button" onclick="toggleImportance()"
+            title="Why the stack is important"
+            aria-label="Explain why the stack is important">!</button>
+
+    <h1>Student Lecture Notes Management System</h1>
+    <p>Record lectures, organize course notes and manage them using a stack.</p>
+</header>
+
+<div class="container">
+
+    <section id="importance" class="panel hidden">
+        <h2>! Why Is a Stack Important in This Application?</h2>
+
+        <p>
+            A stack organizes lecture records so the most recently added
+            lecture is accessed first. It follows LIFO: Last In, First Out.
+        </p>
+
+        <ol>
+            <li><strong>push():</strong> Adds a new lecture note to the top of the stack.</li>
+            <li><strong>pop():</strong> Removes the lecture note currently at the top.</li>
+            <li><strong>top():</strong> Shows the most recent lecture without removing it.</li>
+            <li><strong>empty():</strong> Checks whether the stack has any lecture notes.</li>
+            <li><strong>Order:</strong> Helps students quickly access the latest lecture they recorded.</li>
+            <li><strong>Organization:</strong> Keeps lecture records together with their course details.</li>
+        </ol>
+
+        <div class="stack-box">
+            <strong>Example:</strong>
+            If you record Database Systems first and Computer Networking next,
+            Computer Networking becomes the top item. Calling pop() removes
+            Computer Networking first.
+        </div>
+
+        <p>
+            <strong>Limitation:</strong> A stack is best when the latest lecture
+            is the one you need to access first. Searching for older lectures
+            is also provided in this app for convenience.
+        </p>
+
+        <button class="secondary" onclick="toggleImportance()">Close explanation</button>
+    </section>
+
+    <div class="layout">
+        <main>
+            <section class="panel">
+                <h2>Record a Lecture</h2>
+
+                <form id="lectureForm">
+                    <label for="courseCode">Course Code</label>
+                    <input id="courseCode" placeholder="e.g. INF 214" required>
+
+                    <label for="courseName">Course Name</label>
+                    <input id="courseName" placeholder="e.g. Data Structures" required>
+
+                    <label for="lectureTopic">Lecture Topic</label>
+                    <input id="lectureTopic" placeholder="e.g. Stack Data Structure" required>
+
+                    <label for="lectureDate">Date of Lecture</label>
+                    <input id="lectureDate" type="date" required>
+
+                    <label for="lectureNotes">Notes / Lecture Treated in Class</label>
+                    <textarea id="lectureNotes"
+                        placeholder="Write what your lecturer taught in class here..."
+                        required></textarea>
+
+                    <button class="primary" type="submit">PUSH — Add Lecture</button>
+                    <button class="secondary" type="button" onclick="clearForm()">Clear Form</button>
+                </form>
+
+                <p id="message" class="status">Ready to record your lecture.</p>
+            </section>
+
+            <section class="panel">
+                <h2>Stack Operations</h2>
+                <p>Use the buttons to perform the four stack operations.</p>
+
+                <button class="primary" onclick="showTop()">TOP — View Latest Lecture</button>
+                <button class="danger" onclick="popLecture()">POP — Remove Latest Lecture</button>
+                <button class="secondary" onclick="checkEmpty()">EMPTY — Check Stack</button>
+                <button class="secondary" onclick="showAllLectures()">Display All Lectures</button>
+            </section>
+
+            <section class="panel" id="topResult">
+                <h2>Top Lecture</h2>
+                <p class="status">Click TOP to view the latest lecture.</p>
+            </section>
+
+            <section class="panel">
+                <h2>Search Lecture Notes</h2>
+                <input id="searchInput"
+                       placeholder="Search by course, code, topic or notes..."
+                       oninput="renderLectures()">
+                <div id="lectureList"></div>
+            </section>
+        </main>
+
+        <aside>
+            <section class="panel">
+                <h2>Stack Dashboard</h2>
+                <p><strong>Number of lectures:</strong> <span id="stackCount">0</span></p>
+                <p><strong>Stack status:</strong> <span id="stackStatus">Empty</span></p>
+
+                <div class="stack-box">
+                    <strong>Stack Representation</strong>
+                    <p class="status">TOP is the most recently added lecture.</p>
+                    <div id="stackDisplay"></div>
+                </div>
+
+                <p class="status">
+                    PUSH adds to the top. POP removes from the top.
+                    TOP views the top item. EMPTY checks whether items exist.
+                </p>
+
+                <button class="danger" onclick="clearAllLectures()">Clear All Lectures</button>
+            </section>
+        </aside>
+    </div>
+</div>
+
+<script>
+/*
+   STUDENT LECTURE NOTES STACK
+
+   push()  - add a lecture
+   pop()   - remove the latest lecture
+   top()   - view the latest lecture
+   empty() - check whether the stack has no lectures
+*/
+
+class LectureStack {
+    constructor() {
+        this.items = [];
+    }
+
+    // PUSH: add a lecture to the top of the stack
+    push(lecture) {
+        this.items.push(lecture);
+    }
+
+    // POP: remove and return the lecture at the top
+    pop() {
+        if (this.empty()) {
+            return null;
+        }
+
+        return this.items.pop();
+    }
+
+    // TOP: return the latest lecture without removing it
+    top() {
+        if (this.empty()) {
+            return null;
+        }
+
+        return this.items[this.items.length - 1];
+    }
+
+    // EMPTY: return true if there are no lectures
+    empty() {
+        return this.items.length === 0;
+    }
+
+    size() {
+        return this.items.length;
+    }
+}
+
+const lectureStack = new LectureStack();
+const STORAGE_KEY = "studentLectureNotesStack_v1";
+
+const form = document.getElementById("lectureForm");
+const courseCode = document.getElementById("courseCode");
+const courseName = document.getElementById("courseName");
+const lectureTopic = document.getElementById("lectureTopic");
+const lectureDate = document.getElementById("lectureDate");
+const lectureNotes = document.getElementById("lectureNotes");
+const message = document.getElementById("message");
+
+lectureDate.value = new Date().toISOString().slice(0, 10);
+
+function saveToBrowser() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(lectureStack.items));
+    } catch (error) {
+        message.textContent =
+            "Could not save to browser storage. Export or copy important notes.";
+    }
+}
+
+function loadFromBrowser() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+        if (Array.isArray(saved)) {
+            saved.forEach(lecture => lectureStack.push(lecture));
+        }
+    } catch (error) {
+        message.textContent = "Saved data could not be loaded.";
+    }
+}
+
+function toggleImportance() {
+    document.getElementById("importance").classList.toggle("hidden");
+}
+
+function clearForm() {
+    form.reset();
+    lectureDate.value = new Date().toISOString().slice(0, 10);
+}
+
+form.addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const lecture = {
+        id: Date.now().toString() + Math.random().toString(16).slice(2),
+        courseCode: courseCode.value.trim(),
+        courseName: courseName.value.trim(),
+        topic: lectureTopic.value.trim(),
+        date: lectureDate.value,
+        notes: lectureNotes.value.trim()
+    };
+
+    if (!lecture.courseCode || !lecture.courseName ||
+        !lecture.topic || !lecture.date || !lecture.notes) {
+        message.textContent = "Please complete all fields.";
+        return;
+    }
+
+    // Actual stack PUSH operation
+    lectureStack.push(lecture);
+
+    saveToBrowser();
+    renderAll();
+
+    message.textContent = "PUSH successful: lecture added to the top of the stack.";
+    clearForm();
+});
+
+function popLecture() {
+    // Check using EMPTY before removing
+    if (lectureStack.empty()) {
+        message.textContent = "POP cannot be performed. The stack is empty.";
+        renderAll();
+        return;
+    }
+
+    const lecture = lectureStack.top();
+
+    if (!confirm("Remove the latest lecture: " + lecture.topic + "?")) {
+        return;
+    }
+
+    // Actual stack POP operation
+    const removedLecture = lectureStack.pop();
+
+    saveToBrowser();
+    renderAll();
+
+    message.textContent =
+        "POP successful: removed " + removedLecture.topic + ".";
+}
+
+function showTop() {
+    // Actual stack TOP operation
+    const lecture = lectureStack.top();
+
+    const result = document.getElementById("topResult");
+    result.innerHTML = "";
+
+    const heading = document.createElement("h2");
+    heading.textContent = "Top Lecture";
+    result.appendChild(heading);
+
+    if (lecture === null) {
+        const text = document.createElement("p");
+        text.textContent = "The stack is empty. No latest lecture is available.";
+        result.appendChild(text);
+        message.textContent = "TOP checked: stack is empty.";
+        return;
+    }
+
+    result.appendChild(makeLectureCard(lecture, true));
+
+    const note = document.createElement("p");
+    note.className = "status";
+    note.textContent = "TOP displays the latest lecture without removing it.";
+    result.appendChild(note);
+
+    message.textContent = "TOP successful: latest lecture displayed.";
+}
+
+function checkEmpty() {
+    // Actual stack EMPTY operation
+    if (lectureStack.empty()) {
+        message.textContent = "EMPTY returned true: there are no lectures in the stack.";
+        alert("Stack is EMPTY. No lecture notes have been recorded.");
+    } else {
+        message.textContent =
+            "EMPTY returned false: the stack contains " +
+            lectureStack.size() + " lecture(s).";
+        alert("Stack is NOT EMPTY. Lectures recorded: " + lectureStack.size());
+    }
+
+    renderAll();
+}
+
+function showAllLectures() {
+    document.getElementById("searchInput").value = "";
+    renderLectures();
+    message.textContent = "Displaying all lecture notes.";
+}
+
+function makeLectureCard(lecture, isTop = false) {
+    const card = document.createElement("article");
+    card.className = "note-card" + (isTop ? " current" : "");
+
+    if (isTop) {
+        const badge = document.createElement("span");
+        badge.className = "top-badge";
+        badge.textContent = "TOP OF STACK";
+        card.appendChild(badge);
+    }
+
+    const heading = document.createElement("h3");
+    heading.textContent = lecture.courseCode + " — " + lecture.courseName;
+
+    const topic = document.createElement("p");
+    topic.textContent = "Lecture Topic: " + lecture.topic;
+
+    const date = document.createElement("p");
+    date.textContent = "Date: " + lecture.date;
+
+    const notesHeading = document.createElement("strong");
+    notesHeading.textContent = "Notes treated in class:";
+
+    const notes = document.createElement("p");
+    notes.textContent = lecture.notes;
+
+    card.append(heading, topic, date, notesHeading, notes);
+    return card;
+}
+
+function renderLectures() {
+    const list = document.getElementById("lectureList");
+    const search = document.getElementById("searchInput").value.toLowerCase().trim();
+
+    list.innerHTML = "";
+
+    // Search is for convenience; it does not change stack order.
+    const matchingLectures = lectureStack.items
+        .slice()
+        .reverse()
+        .filter(lecture => {
+            const combined = [
+                lecture.courseCode,
+                lecture.courseName,
+                lecture.topic,
+                lecture.date,
+                lecture.notes
+            ].join(" ").toLowerCase();
+
+            return combined.includes(search);
+        });
+
+    if (matchingLectures.length === 0) {
+        const emptyMessage = document.createElement("p");
+        emptyMessage.className = "status";
+        emptyMessage.textContent = lectureStack.empty()
+            ? "No lecture notes have been recorded yet."
+            : "No lectures match your search.";
+        list.appendChild(emptyMessage);
+        return;
+    }
+
+    matchingLectures.forEach(lecture => {
+        const card = makeLectureCard(lecture, lecture === lectureStack.top());
+
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "danger";
+        deleteButton.textContent = "Delete This Lecture";
+        deleteButton.onclick = () => deleteSpecificLecture(lecture.id);
+
+        card.appendChild(deleteButton);
+        list.appendChild(card);
+    });
+}
+
+function deleteSpecificLecture(id) {
+    const index = lectureStack.items.findIndex(lecture => lecture.id === id);
+
+    if (index === -1) return;
+
+    if (!confirm("Delete this lecture note?")) return;
+
+    /*
+       This is a direct deletion for convenience, not a standard
+       stack operation. Standard POP only removes the top item.
+    */
+    lectureStack.items.splice(index, 1);
+
+    saveToBrowser();
+    renderAll();
+    message.textContent = "Lecture deleted.";
+}
+
+function clearAllLectures() {
+    if (lectureStack.empty()) {
+        message.textContent = "The stack is already empty.";
+        return;
+    }
+
+    if (!confirm("Delete ALL saved lecture notes? This cannot be undone.")) {
+        return;
+    }
+
+    lectureStack.items.length = 0;
+
+    saveToBrowser();
+    renderAll();
+
+    document.getElementById("topResult").innerHTML =
+        "<h2>Top Lecture</h2><p class='status'>The stack is empty.</p>";
+
+    message.textContent = "All lecture notes have been removed.";
+}
+
+function renderStack() {
+    const display = document.getElementById("stackDisplay");
+    display.innerHTML = "";
+
+    if (lectureStack.empty()) {
+        const text = document.createElement("p");
+        text.className = "status";
+        text.textContent = "EMPTY — no lecture notes.";
+        display.appendChild(text);
+        return;
+    }
+
+    // Display top item first to show the LIFO order.
+    lectureStack.items.slice().reverse().forEach((lecture, index) => {
+        const item = document.createElement("div");
+        item.className = "stack-item";
+
+        const label = document.createElement("strong");
+        label.textContent = index === 0 ? "TOP → " : "";
+
+        const title = document.createElement("span");
+        title.textContent = lecture.courseCode + " | " + lecture.topic;
+
+        item.append(label, title);
+
+        if (index === 0) {
+            item.style.border = "2px solid #16a34a";
+        }
+
+        display.appendChild(item);
+    });
+}
+
+function renderAll() {
+    document.getElementById("stackCount").textContent = lectureStack.size();
+    document.getElementById("stackStatus").textContent =
+        lectureStack.empty() ? "EMPTY" : "NOT EMPTY";
+
+    renderStack();
+    renderLectures();
+}
+
+loadFromBrowser();
+renderAll();
+</script>
+
+</body>
+</html>
